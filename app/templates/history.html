@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Digest History — Crypto Digest{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+  <h2>Digest History</h2>
+  <p>All past digests, sorted by date.</p>
+</div>
+
+{% if not digests %}
+<div class="empty-state">
+  <h2>No digests yet</h2>
+  <p>Click <strong>Run Now</strong> in the sidebar to generate your first digest.</p>
+</div>
+
+{% else %}
+
+<div class="section-label">All Digests</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px;">
+  {% for d in digests %}
+  <div style="
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px;
+    transition: all 0.15s;
+  " onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='var(--bg-card)'">
+
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <!-- Status dot -->
+      {% if d.status == 'complete' %}
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+      {% elif d.status == 'error' %}
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+      {% else %}
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--yellow);flex-shrink:0"></div>
+      {% endif %}
+
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:3px">
+          {{ d.date.strftime('%A, %B %d, %Y') }}
+        </div>
+        <div style="font-size:12px;color:var(--text-dim)">
+          {% if d.status == 'complete' %}
+            {{ d.items | length }} curated · {{ d.articles_processed }} scanned · {{ d.created_at.strftime('%I:%M %p') }}
+          {% elif d.status == 'error' %}
+            Error: {{ d.error_message[:80] if d.error_message else 'unknown error' }}
+          {% else %}
+            {{ d.status }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if d.status == 'complete' %}
+    <a href="/digest/{{ d.date }}" style="
+      font-size:12px;font-weight:600;color:var(--green);
+      text-decoration:none;padding:6px 14px;
+      border:1px solid rgba(35,211,137,0.3);border-radius:8px;
+      background:rgba(35,211,137,0.07);transition:all 0.15s;white-space:nowrap;
+    " onmouseover="this.style.background='rgba(35,211,137,0.15)'" onmouseout="this.style.background='rgba(35,211,137,0.07)'">
+      View →
+    </a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% endif %}
+{% endblock %}

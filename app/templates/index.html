@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if digest %}Crypto Digest — {{ digest.date.strftime('%B %d, %Y') }}{% else %}Crypto Digest{% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if not digest %}
+<div class="empty-state">
+  <h2>No digest yet</h2>
+  <p>Click <strong>Run Now</strong> in the sidebar to generate your first crypto digest.</p>
+  <div class="hint">Daily digests run automatically at 7:00 AM</div>
+</div>
+
+{% else %}
+
+<!-- Panel header -->
+<div class="panel-header">
+  <h2>{{ digest.date.strftime('%A, %B %d, %Y') }}</h2>
+  <p>{{ digest.articles_processed }} articles scanned · {{ digest.items | length }} curated · Generated {{ digest.created_at.strftime('%I:%M %p') }}</p>
+</div>
+
+<!-- Stat row -->
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="label">Curated</div>
+    <div class="value">{{ digest.items | length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Scanned</div>
+    <div class="value blue">{{ digest.articles_processed }}</div>
+  </div>
+  {% set ma_count = digest.items | selectattr('category', 'equalto', 'ma') | list | length %}
+  {% set reg_count = digest.items | selectattr('category', 'equalto', 'regulatory') | list | length %}
+  {% if ma_count %}
+  <div class="stat-card">
+    <div class="label">M&amp;A</div>
+    <div class="value yellow">{{ ma_count }}</div>
+  </div>
+  {% endif %}
+  {% if reg_count %}
+  <div class="stat-card">
+    <div class="label">Regulatory</div>
+    <div class="value purple">{{ reg_count }}</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Executive Summary -->
+{% if digest.executive_summary %}
+<div class="exec-card">
+  <div class="exec-label">Executive Summary</div>
+  <p>{{ digest.executive_summary }}</p>
+</div>
+{% endif %}
+
+<!-- Category sections -->
+{% set cat_config = [
+  ('ma',         'M&A / Deals',       '#2870F0'),
+  ('regulatory', 'Regulatory',        '#A456EA'),
+  ('trends',     'Market Trends',     '#23D389'),
+  ('headlines',  'Headlines',         '#FDBD5B'),
+] %}
+
+{% for cat_key, cat_label, cat_color in cat_config %}
+  {% set items = digest.items_by_category(cat_key) %}
+  {% if items %}
+  <div class="category-section">
+    <div class="category-header">
+      <div class="category-dot" style="background: {{ cat_color }}"></div>
+      <h2 style="color: {{ cat_color }}">{{ cat_label }}</h2>
+      <span class="count">{{ items | length }}</span>
+    </div>
+
+    <div class="article-grid">
+      {% for item in items %}
+      <div class="article-card">
+        <div class="card-top">
+          <a href="{{ item.article.url }}" target="_blank" rel="noopener" class="headline">
+            {{ item.article.title }}
+          </a>
+          {% if item.importance >= 8 %}
+            <span class="importance-badge imp-high">HIGH</span>
+          {% elif item.importance >= 6 %}
+            <span class="importance-badge imp-mid">MID</span>
+          {% else %}
+            <span class="importance-badge imp-low">LOW</span>
+          {% endif %}
+        </div>
+
+        <p class="summary">{{ item.summary }}</p>
+
+        <div class="card-footer">
+          <span class="source-tag">{{ item.article.source }}</span>
+          {% if item.article.published_at %}
+            <span class="article-date">{{ item.article.published_at.strftime('%b %d, %Y') }}</span>
+          {% endif %}
+          <span class="article-date" style="margin-left: auto">{{ item.importance }}/10</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
+
+{% if not digest.items %}
+<div class="empty-state">
+  <h2>No articles categorized</h2>
+  <p>The pipeline ran but found no relevant articles. Try running again later.</p>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Crypto Digest{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:    #23D389;
+  --blue:     #2870F0;
+  --cyan:     #90FCFF;
+  --purple:   #A456EA;
+  --yellow:   #FDBD5B;
+  --red:      #D04E59;
+  --bg:       #0A0A0A;
+  --bg-card:  #141414;
+  --bg-hover: #1C1C1C;
+  --border:   #2A2A2A;
+  --text:     #FFFFFF;
+  --text-muted: #CBD0DB;
+  --text-dim:   #6B6B6B;
+  --surface:    #1A1A1A;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 280px;
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #111 0%, var(--bg) 100%);
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.sidebar-header {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.sidebar-header .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.sidebar-header .bullish-logo {
+  height: 22px;
+  width: auto;
+  opacity: 0.95;
+}
+.sidebar-header h1 { font-size: 18px; font-weight: 600; }
+.sidebar-header h1 span { color: var(--green); }
+.sidebar-header .badge {
+  font-size: 11px; color: var(--text-muted);
+  background: var(--surface); padding: 3px 8px;
+  border-radius: 12px; border: 1px solid var(--border);
+  display: inline-block; margin-top: 6px;
+}
+
+/* ── Sidebar nav ── */
+.sidebar-nav { flex: 1; padding: 8px 12px; overflow-y: auto; }
+
+.nav-label {
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-dim); padding: 8px 8px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.nav-item.active { background: rgba(35,211,137,0.06); border-color: var(--green); color: var(--green); }
+.nav-item .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0;
+}
+.nav-item.active .dot { background: var(--green); }
+
+.nav-divider { height: 1px; background: var(--border); margin: 10px 8px; }
+
+/* ── Digest date list ── */
+.digest-list { padding: 0 12px; }
+.digest-date-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-radius: 8px;
+  text-decoration: none; color: var(--text-muted);
+  font-size: 12px; transition: all 0.15s;
+  margin-bottom: 2px;
+}
+.digest-date-item:hover { background: var(--bg-hover); color: var(--text); }
+.digest-date-item.active { background: rgba(35,211,137,0.07); color: var(--green); }
+.digest-date-item .cnt {
+  font-size: 10px; color: var(--text-dim);
+  background: var(--surface); padding: 1px 6px;
+  border-radius: 10px; border: 1px solid var(--border);
+}
+
+.sidebar-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+}
+.run-btn {
+  width: 100%;
+  padding: 12px;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  color: #000; background: var(--green);
+  border: none; border-radius: 10px;
+  cursor: pointer; transition: all 0.15s;
+}
+.run-btn:hover { background: #2ee09a; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(35,211,137,0.25); }
+.run-btn:disabled { background: var(--border); color: var(--text-dim); cursor: not-allowed; transform: none; box-shadow: none; }
+
+.status-line {
+  font-size: 11px; color: var(--text-dim);
+  margin-top: 8px; text-align: center; line-height: 1.5;
+}
+.status-line .running-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--yellow);
+  animation: pulse 1.5s infinite; margin-right: 4px; vertical-align: middle;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* ── Section label ── */
+.section-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--green); margin-bottom: 14px;
+}
+
+/* ── Stat cards ── */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+.stat-card {
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  min-width: 120px;
+}
+.stat-card .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.stat-card .value { font-size: 22px; font-weight: 700; color: var(--green); }
+.stat-card .value.blue { color: var(--blue); }
+.stat-card .value.yellow { color: var(--yellow); }
+.stat-card .value.purple { color: var(--purple); }
+
+/* ── Executive summary ── */
+.exec-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
+}
+.exec-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--green), var(--blue));
+}
+.exec-card .exec-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--green); margin-bottom: 10px;
+}
+.exec-card p {
+  font-size: 14px; color: var(--text-muted);
+  line-height: 1.7;
+}
+
+/* ── Category section ── */
+.category-section { margin-bottom: 32px; }
+.category-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.category-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.category-header h2 {
+  font-size: 14px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.category-header .count {
+  font-size: 11px; color: var(--text-dim);
+  background: var(--surface); padding: 2px 8px;
+  border-radius: 10px; border: 1px solid var(--border);
+}
+
+/* ── Article cards ── */
+.article-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 1100px) { .article-grid { grid-template-columns: 1fr; } }
+
+.article-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.article-card:hover { background: var(--bg-hover); border-color: #444; }
+
+.article-card .card-top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+}
+.article-card .headline {
+  font-size: 13px; font-weight: 600;
+  color: var(--text); text-decoration: none;
+  line-height: 1.45; flex: 1;
+}
+.article-card .headline:hover { color: var(--green); }
+
+.importance-badge {
+  flex-shrink: 0;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+.imp-high   { background: rgba(208,78,89,0.15);  color: var(--red);    border: 1px solid rgba(208,78,89,0.25); }
+.imp-mid    { background: rgba(253,189,91,0.15); color: var(--yellow); border: 1px solid rgba(253,189,91,0.25); }
+.imp-low    { background: var(--surface);        color: var(--text-dim); border: 1px solid var(--border); }
+
+.article-card .summary {
+  font-size: 12px; color: var(--text-muted); line-height: 1.6;
+}
+
+.article-card .card-footer {
+  display: flex; align-items: center; gap: 8px; margin-top: auto;
+}
+.source-tag {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--text-dim);
+  background: var(--surface); padding: 2px 7px;
+  border-radius: 6px; border: 1px solid var(--border);
+}
+.article-date { font-size: 11px; color: var(--text-dim); }
+
+/* ── Empty state ── */
+.empty-state {
+  text-align: center; padding: 80px 40px;
+}
+.empty-state h2 { font-size: 20px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+.empty-state p { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; }
+.empty-state .hint {
+  font-size: 12px; color: var(--text-dim);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 18px; display: inline-block;
+}
+
+/* ── Panel header ── */
+.panel-header { margin-bottom: 32px; }
+.panel-header h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+.panel-header p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <img src="/static/bullish-logo-white.png" alt="Bullish" class="bullish-logo">
+    </div>
+    <h1>Crypto <span>Digest</span></h1>
+    <div class="badge">Daily Intelligence</div>
+  </div>
+
+  <div class="sidebar-nav">
+    <div class="nav-label">Views</div>
+    <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+      <span class="dot"></span> Latest Digest
+    </a>
+    <a href="/history" class="nav-item {% if request.path == '/history' %}active{% endif %}">
+      <span class="dot"></span> History
+    </a>
+    <a href="/articles" class="nav-item {% if request.path == '/articles' %}active{% endif %}">
+      <span class="dot"></span> Browse by Category
+    </a>
+
+    {% if recent_digests %}
+    <div class="nav-divider"></div>
+    <div class="nav-label">Recent</div>
+    {% for d in recent_digests[:8] %}
+    <a href="/digest/{{ d.date }}" class="digest-date-item {% if digest and d.date == digest.date %}active{% endif %}">
+      <span>{{ d.date.strftime('%b %d, %Y') }}</span>
+      <span class="cnt">{{ d.items | length }}</span>
+    </a>
+    {% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="run-btn" id="run-btn" onclick="triggerDigest()">Run Now</button>
+    <div class="status-line" id="status-line">
+      {% if digest %}Last run: {{ digest.created_at.strftime('%b %d · %I:%M %p') }}{% else %}No digest yet{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+  {% block content %}{% endblock %}
+</div>
+
+<script>
+async function triggerDigest() {
+  const btn = document.getElementById('run-btn');
+  const line = document.getElementById('status-line');
+  btn.disabled = true;
+  btn.textContent = 'Running…';
+  line.innerHTML = '<span class="running-dot"></span> Digest in progress…';
+
+  try {
+    const res = await fetch('/api/run-now', { method: 'POST' });
+    const data = await res.json();
+    if (res.status === 409) {
+      line.innerHTML = '<span class="running-dot"></span> Already running…';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Run Now';
+    line.textContent = 'Error — try again';
+  }
+}
+
+async function pollStatus() {
+  const res = await fetch('/api/status');
+  const data = await res.json();
+  const btn = document.getElementById('run-btn');
+  const line = document.getElementById('status-line');
+  if (data.running) {
+    btn.disabled = true;
+    btn.textContent = 'Running…';
+    line.innerHTML = '<span class="running-dot"></span> Digest in progress…';
+    setTimeout(pollStatus, 8000);
+  } else {
+    if (btn.textContent === 'Running…') {
+      location.reload();
+    }
+  }
+}
+pollStatus();
+</script>
+</body>
+</html>
