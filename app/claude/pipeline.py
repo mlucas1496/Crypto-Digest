@@ -138,10 +138,15 @@ class ProcessedArticle:
 
 
 def _call_batch(batch: list[RawArticle]) -> list[ProcessedArticle]:
-    batch_text = "\n\n".join(
-        f"URL: {a.url}\nTitle: {a.title}\nSnippet: {(a.snippet or '')[:200]}"
-        for a in batch
-    )
+    from datetime import date
+    today = date.today().isoformat()
+
+    def _article_text(a: RawArticle) -> str:
+        pub = a.published_at.strftime("%Y-%m-%d") if a.published_at else "unknown"
+        return f"URL: {a.url}\nPublished: {pub}\nTitle: {a.title}\nSnippet: {(a.snippet or '')[:200]}"
+
+    batch_text = "\n\n".join(_article_text(a) for a in batch)
+    batch_text = f"Today's date: {today}\n\n{batch_text}"
     prompt = FILTER_AND_SUMMARIZE_PROMPT.format(articles=batch_text)
     url_map = {a.url: a for a in batch}
 

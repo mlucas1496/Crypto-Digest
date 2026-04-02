@@ -123,6 +123,7 @@ def run_digest(target_date: date | None = None, force: bool = False) -> Digest:
             digest.executive_summary = exec_summary
             digest.status = "complete"
             digest.articles_processed = len(all_articles)
+            digest.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
             print(f"[runner] Digest complete: {len(processed)} items across {len(rank_counters)} categories")
             return digest

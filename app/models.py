@@ -38,6 +38,7 @@ class Digest(Base):
     date = Column(Date, unique=True, nullable=False)
     executive_summary = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, nullable=True)
     status = Column(String(16), default="pending", nullable=False)  # pending/complete/error
     error_message = Column(Text, nullable=True)
     articles_processed = Column(Integer, default=0)

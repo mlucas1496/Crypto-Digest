@@ -333,7 +333,7 @@ body {
   <div class="sidebar-footer">
     <button class="run-btn" id="run-btn" onclick="triggerDigest()">Run Now</button>
     <div class="status-line" id="status-line">
-      {% if digest %}Last run: {{ digest.created_at.strftime('%b %d · %I:%M %p') }}{% else %}No digest yet{% endif %}
+      {% if digest %}Last run: {{ (digest.updated_at or digest.created_at)|eastern }}{% else %}No digest yet{% endif %}
     </div>
   </div>
 </div>
@@ -352,11 +352,12 @@ async function triggerDigest() {
   line.innerHTML = '<span class="running-dot"></span> Digest in progress…';
 
   try {
-    const res = await fetch('/api/run-now', { method: 'POST' });
+    const res = await fetch('/api/run-now?force=true', { method: 'POST' });
     const data = await res.json();
     if (res.status === 409) {
       line.innerHTML = '<span class="running-dot"></span> Already running…';
     }
+    setTimeout(pollStatus, 2000);
   } catch(e) {
     btn.disabled = false;
     btn.textContent = 'Run Now';
@@ -365,20 +366,23 @@ async function triggerDigest() {
 }
 
 async function pollStatus() {
-  const res = await fetch('/api/status');
-  const data = await res.json();
-  const btn = document.getElementById('run-btn');
-  const line = document.getElementById('status-line');
-  if (data.running) {
-    btn.disabled = true;
-    btn.textContent = 'Running…';
-    line.innerHTML = '<span class="running-dot"></span> Digest in progress…';
-    setTimeout(pollStatus, 8000);
-  } else {
-    if (btn.textContent === 'Running…') {
-      location.reload();
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    const btn = document.getElementById('run-btn');
+    const line = document.getElementById('status-line');
+    if (data.running) {
+      btn.disabled = true;
+      btn.textContent = 'Running…';
+      line.innerHTML = '<span class="running-dot"></span> Digest in progress…';
+    } else {
+      if (btn.textContent === 'Running…') {
+        location.reload();
+        return;
+      }
     }
-  }
+  } catch(e) { /* ignore */ }
+  setTimeout(pollStatus, 5000);
 }
 pollStatus();
 </script>

@@ -16,6 +16,7 @@ def start_scheduler(app):
     from apscheduler.schedulers.background import BackgroundScheduler
     from apscheduler.triggers.cron import CronTrigger
     from zoneinfo import ZoneInfo
+    from datetime import date, datetime, timezone
 
     tz = ZoneInfo(config.DIGEST_TIMEZONE)
     scheduler = BackgroundScheduler(timezone=tz)
@@ -36,6 +37,25 @@ def start_scheduler(app):
         f"[scheduler] Daily digest scheduled at "
         f"{config.DIGEST_HOUR:02d}:{config.DIGEST_MINUTE:02d} {config.DIGEST_TIMEZONE}"
     )
+
+    # Catch-up: if it's past the scheduled time and today's digest hasn't run, run it now
+    def _catch_up():
+        from app.database import get_db
+        from app.models import Digest
+        now_local = datetime.now(tz)
+        scheduled_passed = (now_local.hour, now_local.minute) >= (config.DIGEST_HOUR, config.DIGEST_MINUTE)
+        if not scheduled_passed:
+            return
+        with app.app_context():
+            with get_db() as db:
+                existing = db.query(Digest).filter(Digest.date == date.today()).first()
+                if existing and existing.status == "complete" and existing.articles_processed > 0:
+                    return  # already ran successfully today
+        print("[scheduler] Catch-up: today's digest was missed — running now")
+        job()
+
+    import threading
+    threading.Thread(target=_catch_up, daemon=True).start()
 
     def shutdown(sig, frame):
         print("\n[scheduler] Shutting down...")

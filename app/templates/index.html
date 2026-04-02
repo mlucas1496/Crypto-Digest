@@ -18,7 +18,7 @@
 <!-- Panel header -->
 <div class="panel-header">
   <h2>{{ digest.date.strftime('%A, %B %d, %Y') }}</h2>
-  <p>{{ digest.articles_processed }} articles scanned · {{ digest.items | length }} curated · Generated {{ digest.created_at.strftime('%I:%M %p') }}</p>
+  <p>{{ digest.articles_processed }} articles scanned · {{ digest.items | length }} curated · Generated {{ (digest.updated_at or digest.created_at)|eastern }}</p>
 </div>
 
 <!-- Stat row -->
